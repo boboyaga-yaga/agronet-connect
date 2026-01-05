@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Leaf, Mail, Lock, User, ArrowRight, Sprout, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type UserRole = "farmer" | "investor";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [role, setRole] = useState<UserRole>("investor");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,8 +22,55 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Registration will be implemented with Supabase
-    setTimeout(() => setIsLoading(false), 1000);
+
+    try {
+      // Sign up the user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+
+      if (authError) {
+        if (authError.message.includes("already registered")) {
+          toast.error("This email is already registered. Please sign in instead.");
+        } else {
+          toast.error(authError.message);
+        }
+        return;
+      }
+
+      if (authData.user) {
+        // Insert the user role
+        const { error: roleError } = await supabase.from("user_roles").insert({
+          user_id: authData.user.id,
+          role: role,
+        });
+
+        if (roleError) {
+          console.error("Error setting role:", roleError);
+          toast.error("Account created but failed to set role. Please contact support.");
+        } else {
+          toast.success("Account created successfully!");
+          // Navigate based on role
+          if (role === "farmer") {
+            navigate("/dashboard/farmer");
+          } else {
+            navigate("/dashboard/investor");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
