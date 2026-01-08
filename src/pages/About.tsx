@@ -40,10 +40,10 @@ const values = [
 ];
 
 const team = [
-  { name: "Dr. Adaeze Okonkwo", role: "CEO & Founder", initials: "AO" },
-  { name: "Emeka Chukwu", role: "CTO", initials: "EC" },
-  { name: "Fatima Abubakar", role: "Head of Operations", initials: "FA" },
-  { name: "Oluwaseun Adeleke", role: "Head of Investments", initials: "OA" },
+  { name: "Bryan Jerry Bassey", role: "CEO & Founder", initials: "BJ" },
+  { name: "Emmanuella", role: "CTO", initials: "EC" },
+  { name: "Adanini Taiwo", role: "Head of Operations", initials: "HOO" },
+  { name: "Faratech Organizations", role: "Head of Tech", initials: "FA" },
 ];
 
 const partners = [
