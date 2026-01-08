@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { InsightPanel, InsightGrid } from "@/components/InsightPanel";
 import { GlassCard } from "@/components/GlassCard";
@@ -21,10 +21,13 @@ import {
   Sprout,
   ArrowUpRight,
   PieChart,
+  Building2,
+  GraduationCap,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 
 const sidebarLinks = [
   { icon: BarChart3, label: "Overview", href: "/dashboard/investor", active: true },
@@ -70,9 +73,38 @@ const verifiedFarmers = [
   },
 ];
 
+const featuredInvestors = [
+  { name: "Mountain Top University", amount: "₦25M", icon: GraduationCap },
+  { name: "Faratech Organizations", amount: "₦150M", icon: Building2 },
+];
+
 const InvestorDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { user, profile, signOut, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/auth/login");
+    }
+  }, [user, isLoading, navigate]);
+
+  const getInitials = () => {
+    if (profile?.full_name) {
+      return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+    }
+    return "U";
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center"><div className="text-accent">Loading...</div></div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,10 +142,10 @@ const InvestorDashboard = () => {
           <div className="glass-card p-4 mb-6 mt-16 lg:mt-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                <span className="text-accent font-semibold">OA</span>
+                <span className="text-accent font-semibold">{getInitials()}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate">Oluwaseun Adeleke</p>
+                <p className="font-medium text-foreground truncate">{profile?.full_name || "Investor"}</p>
                 <p className="text-xs text-muted-foreground">Investor</p>
               </div>
             </div>
@@ -140,7 +172,7 @@ const InvestorDashboard = () => {
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-border">
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground w-full transition-colors">
+          <button onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground w-full transition-colors">
             <LogOut className="w-5 h-5" />
             Sign out
           </button>

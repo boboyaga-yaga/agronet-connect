@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { InsightPanel, InsightGrid } from "@/components/InsightPanel";
 import { GlassCard } from "@/components/GlassCard";
@@ -22,8 +22,9 @@ import {
   Calendar,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const sidebarLinks = [
   { icon: BarChart3, label: "Dashboard", href: "/dashboard/farmer", active: true },
@@ -43,6 +44,37 @@ const recentTransactions = [
 
 const FarmerDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, profile, signOut, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/auth/login");
+    }
+  }, [user, isLoading, navigate]);
+
+  const getInitials = () => {
+    if (profile?.full_name) {
+      return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+    }
+    return "U";
+  };
+
+  const getFirstName = () => {
+    if (profile?.full_name) {
+      return profile.full_name.split(" ")[0];
+    }
+    return "Farmer";
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center"><div className="text-accent">Loading...</div></div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,15 +112,15 @@ const FarmerDashboard = () => {
           <div className="glass-card p-4 mb-6 mt-16 lg:mt-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-accent font-semibold">AO</span>
+                <span className="text-accent font-semibold">{getInitials()}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate">Adamu Okonkwo</p>
-                <p className="text-xs text-muted-foreground">Rice Farmer</p>
+                <p className="font-medium text-foreground truncate">{profile?.full_name || "Farmer"}</p>
+                <p className="text-xs text-muted-foreground">Farmer</p>
               </div>
             </div>
             <div className="mt-3">
-              <VerificationBadge status="verified" size="sm" />
+              <VerificationBadge status="pending" size="sm" />
             </div>
           </div>
 
@@ -114,7 +146,7 @@ const FarmerDashboard = () => {
 
         {/* Logout */}
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-border">
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground w-full transition-colors">
+          <button onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground w-full transition-colors">
             <LogOut className="w-5 h-5" />
             Sign out
           </button>
@@ -132,7 +164,7 @@ const FarmerDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-2xl lg:text-3xl font-bold text-foreground"
               >
-                Good morning, Adamu 👋
+                Good morning, {getFirstName()} 👋
               </motion.h1>
               <p className="text-muted-foreground mt-1">
                 Here's what's happening with your farm today
